@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{FE45B8C5-8532-48A8-AF93-522944BB6558}</ProjectGuid>
+    <Keyword>QtVS_v304</Keyword>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0.22000.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0.22000.0</WindowsTargetPlatformVersion>
+    <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
+    <Import Project="$(QtMsBuild)\qt_defaults.props" />
+  </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
+    <QtInstall>6.3.1_msvc2019_64</QtInstall>
+    <QtModules>core;gui;widgets</QtModules>
+    <QtBuildConfig>debug</QtBuildConfig>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
+    <QtInstall>6.3.1_msvc2019_64</QtInstall>
+    <QtModules>core;gui;widgets</QtModules>
+    <QtBuildConfig>release</QtBuildConfig>
+  </PropertyGroup>
+  <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
+    <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
+  </Target>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(QtMsBuild)\Qt.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(QtMsBuild)\Qt.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)/external/wpi/ntcore/src/main/native/include/;$(SolutionDir)/external/wpi/wpiutil/src/main/native/thirdparty/llvm/include/;$(SolutionDir)/external/wpi/wpiutil/src/main/native/include/;$(SolutionDir)/external/wpi/ntcore/build/generated/main/native/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(SolutionDir)/external/wpi/ntcore/build/libs/ntcore/static/windowsx86-64/debug/ntcored.lib;$(SolutionDir)/external/wpi/wpinet/build/libs/wpinet/static/windowsx86-64/debug/wpinetd.lib;$(SolutionDir)/external/wpi/wpiutil/build/libs/wpiutil/static/windowsx86-64/debug/wpiutild.lib;%(AdditionalDependencies);$(Qt_LIBS_)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutDir)images" mkdir $(OutDir)images
+copy $(SolutionDir)images\*.png $(OutDir)images
+$(QTDIR)\bin\windeployqt $(OutDir)$(ProjectName).exe
+copy $(SolutionDir)external\wpi\bin\$(Configuration)\*.dll $(OutDir)
+copy $(SolutionDir)installer\VC_redist.x64.exe $(OutDir)
+</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>c:\cygwin64\bin\bash incver.sh</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)/external/wpi/ntcore/src/main/native/include/;$(SolutionDir)/external/wpi/wpiutil/src/main/native/thirdparty/llvm/include/;$(SolutionDir)/external/wpi/wpiutil/src/main/native/include/;$(SolutionDir)/external/wpi/ntcore/build/generated/main/native/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(SolutionDir)/external/wpi/ntcore/build/libs/ntcore/static/windowsx86-64/release/ntcore.lib;$(SolutionDir)/external/wpi/wpinet/build/libs/wpinet/static/windowsx86-64/release/wpinet.lib;$(SolutionDir)/external/wpi/wpiutil/build/libs/wpiutil/static/windowsx86-64/release/wpiutil.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>
+      </AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(OutDir)images" mkdir $(OutDir)images
+copy $(SolutionDir)images\*.png $(OutDir)images
+$(QTDIR)\bin\windeployqt $(OutDir)$(ProjectName).exe
+copy $(SolutionDir)external\wpi\bin\$(Configuration)\*.dll $(OutDir)
+copy $(SolutionDir)installer\VC_redist.x64.exe $(OutDir)
+</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>c:\cygwin64\bin\bash incver.sh</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ClCompile>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ClCompile>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <Optimization>MaxSpeed</Optimization>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="NtValueDisplayWidget.cpp" />
+    <ClCompile Include="NTValueFormatting.cpp" />
+    <ClCompile Include="Plot.cpp" />
+    <ClCompile Include="PlotData.cpp" />
+    <ClCompile Include="PlotManager.cpp" />
+    <ClCompile Include="TabEditName.cpp" />
+    <ClCompile Include="XeroItemFrame.cpp" />
+    <QtRcc Include="xerodashboard2.qrc" />
+    <QtMoc Include="XeroDashboardWin.h" />
+    <ClCompile Include="DashView.cpp" />
+    <ClCompile Include="ValueDisplayWidget.cpp" />
+    <ClCompile Include="PlotSelectWidget.cpp" />
+    <ClCompile Include="XeroDashboardWin.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="build.h" />
+    <ClInclude Include="JsonFieldNames.h" />
+    <QtMoc Include="NtValueDisplayWidget.h" />
+    <QtMoc Include="TabEditName.h" />
+    <QtMoc Include="XeroItemFrame.h" />
+    <QtMoc Include="DashView.h" />
+    <QtMoc Include="ValueDisplayWidget.h" />
+    <ClInclude Include="NTValueFormatting.h" />
+    <QtMoc Include="Plot.h" />
+    <ClInclude Include="PlotData.h" />
+    <QtMoc Include="PlotManager.h" />
+    <ClInclude Include="PlotSelectWidget.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
+    <Import Project="$(QtMsBuild)\qt.targets" />
+  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

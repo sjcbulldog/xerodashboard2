@@ -1,0 +1,9 @@
+This directory contains the pieces from wpilib that are needed.  THis is the network tables libraries
+and the libraries they depend on.  I get the source from the allwpilib git repo, build just the network
+table code which builds its dependencies, and then copy those complete directories here.  As such these
+are not part of the git repo here.
+
+cd temp
+git clone https://github.com/wpilibsuite/allwpilib.git
+./gradlew ntcore:build
+cp -r ntcore wpinet wpiutil THIS_DIRECTOR Y

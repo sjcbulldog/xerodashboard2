@@ -1,0 +1,15 @@
+**/*.qhc
+**/*.qch
+**/*~
+**/x64
+**/.qmake.stash
+**/Debug
+**/Release
+**/debug
+**/release
+.vs
+docs
+**/*.o
+.DS_Store
+installer/xero*.exe
+external/wpi
