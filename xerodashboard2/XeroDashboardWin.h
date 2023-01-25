@@ -7,6 +7,7 @@
 #include <QtWidgets/QDockWidget>
 #include <QtWidgets/QPlainTextEdit>
 #include <networktables/NetworkTableInstance.h>
+#include <networktables/MultiSubscriber.h>
 #include "ValueDisplayWidget.h"
 #include "PlotManager.h"
 #include "PlotSelectWidget.h"
@@ -40,7 +41,6 @@ private:
     void startNetworkTables(const QString& ipaddr, const QString& name);
 
     void listenNotify(const nt::Event& ev);
-    void timerHandler();
 
     void putMessageInLogWindow(QString msg) {
         logwin_->appendPlainText(msg);
@@ -68,8 +68,6 @@ private:
     QString ipaddr_;
     nt::NetworkTableInstance inst_;
     NT_Listener listener_;
-
-    QTimer *timer_;
 
     QStringList storedLogLines_;
 };

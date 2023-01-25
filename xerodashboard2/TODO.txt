@@ -1,0 +1,2 @@
+For text display widgets - allow user to set font
+Load and store visual appearance via JSON file

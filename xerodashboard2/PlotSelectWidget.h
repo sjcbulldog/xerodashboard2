@@ -10,6 +10,9 @@ public:
 	PlotSelectWidget(PlotManager &mgr, QWidget* parent);
 	virtual ~PlotSelectWidget() = default;
 
+protected:
+	QMimeData* mimeData(const QList<QTreeWidgetItem*>& items) const;
+
 private:
 	void addNewPlot(const QString& name);
 	void dataArrived(const QString& name);

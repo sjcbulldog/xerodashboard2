@@ -9,39 +9,30 @@ class ValueDisplayWidget : public QTreeWidget
 {
 	Q_OBJECT
 
-	template <class T>
-	struct ItemAndSubscriber
-	{
-		QTreeWidgetItem* item_;
-		T sub_;
-	};
-
 public:
-	ValueDisplayWidget(nt::NetworkTableInstance &inst, QWidget* parent);
+	ValueDisplayWidget(QWidget* parent);
 	virtual ~ValueDisplayWidget() = default;
 
-	void addNode(const QString& node);
-	void removeNode(const QString& node);
-	void updateNodes();
+	void addNode(QString node);
+	void removeNode(QString node);
+	void updateNode(QString node, nt::Value value);
 
 signals:
 	void addNodeAsync(const QString& node);
 	void removeNodeAsync(const QString& node);
+	void updateNodeAsync(const QString& node, nt::Value value);
 
 protected:
 	QMimeData* mimeData(const QList<QTreeWidgetItem*>& items) const;
 
 private:
-	void addNodeInternal(const QString& node);
-	void removeNodeInternal(const QString& node);
-	void descendItem(QTreeWidgetItem* item);
-	void updateItem(QTreeWidgetItem* item);
-	void removeSubscriber(QTreeWidgetItem* item);
+	void addNodeInternal(QString node);
+	void removeNodeInternal(QString node);
+	void updateNodeInternal(QString node, nt::Value value);
+
+	QTreeWidgetItem* getItemByName(const QString& name);
 
 private:
 	QThread* gui_thread_;
-	nt::NetworkTableInstance &inst_;
-	int counter_;
-	QMap<int, void*> maps_;
 };
 

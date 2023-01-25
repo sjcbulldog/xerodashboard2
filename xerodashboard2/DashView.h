@@ -4,6 +4,7 @@
 #include <QtWidgets/QWidget>
 #include <networktables/NetworkTableInstance.h>
 #include "XeroItemFrame.h"
+#include "PlotManager.h"
 
 class NetworkTableManager;
 class PlotMgr;
@@ -15,8 +16,10 @@ class DashView : public QWidget
 	Q_OBJECT
 
 public:
-	DashView(nt::NetworkTableInstance& inst, QWidget *parent = Q_NULLPTR);
+	DashView(nt::NetworkTableInstance& inst, PlotManager &pmgr, QWidget *parent = Q_NULLPTR);
 	~DashView();
+
+	void updateNode(const QString& node, const nt::Value &value);
 
 	int tileMargin() const {
 		return tile_margin_;
@@ -102,4 +105,6 @@ private:
 	QPoint mouse_;
 
 	QPoint drag_mouse_start_;
+
+	PlotManager& plot_mgr_;
 };

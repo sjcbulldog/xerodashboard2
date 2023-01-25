@@ -23,7 +23,16 @@ public:
 	std::shared_ptr<PlotData> getPlotData();
 	int dataPoints();
 
+	void setReady() {
+		ready_ = true;
+	}
+
+	void setDataReceivedThreshold(int t) {
+		threshold_ = t;
+	}
+
 signals:
+	void columnsDefined(QStringList columns);
 	void restarted(const QString &name);
 	void dataArrived(const QString &name);
 	void complete(const QString &name);
@@ -58,4 +67,9 @@ private:
 
 	QString plot_base_name_;
 	QMutex lock_;
+
+	int threshold_;
+	int count_;
+
+	bool ready_;
 };

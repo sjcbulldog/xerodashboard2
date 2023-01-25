@@ -12,7 +12,7 @@ class NTValueDisplayWidget : public QWidget
 	Q_OBJECT
 
 public:
-	NTValueDisplayWidget(nt::NetworkTableInstance& inst, const QString &node, QWidget * parent = Q_NULLPTR);
+	NTValueDisplayWidget(const QString &node, QWidget * parent = Q_NULLPTR);
 	~NTValueDisplayWidget();
 
 	QJsonObject getJSONDesc() const;
@@ -22,14 +22,20 @@ public:
 		update();
 	}
 
-	void updateData();
+	void updateData(const nt::Value& value) {
+		value_ = value;
+		update();
+	}
+
+	const QString& node() const {
+		return node_;
+	}
 
 protected:
 	void paintEvent(QPaintEvent* ev) override;
 	bool event(QEvent* ev) override;
 
 private:
-
 	void drawContentsBoolean(QPainter& p);
 	void drawContentsText(QPainter& p);
 	void drawContentsBar(QPainter& p);
@@ -40,9 +46,8 @@ private:
 
 private:
 	QString display_type_;
-	NT_Type data_type_;
+	nt::Value value_;
 
 	QString node_;
-	nt::NetworkTableInstance& inst_;
 	bool active_;
 };

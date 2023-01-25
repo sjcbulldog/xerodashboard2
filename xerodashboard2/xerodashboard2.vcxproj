@@ -32,12 +32,12 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>6.3.1_msvc2019_64</QtInstall>
-    <QtModules>core;gui;widgets</QtModules>
+    <QtModules>core;gui;widgets;printsupport</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>6.3.1_msvc2019_64</QtInstall>
-    <QtModules>core;gui;widgets</QtModules>
+    <QtModules>core;gui;widgets;printsupport</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
@@ -125,15 +125,21 @@ copy $(SolutionDir)installer\VC_redist.x64.exe $(OutDir)
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="EditableTabWidget.cpp" />
+    <ClCompile Include="GraphNodeList.cpp" />
+    <ClCompile Include="GraphWidget.cpp" />
+    <ClCompile Include="MovingAverage.cpp" />
     <ClCompile Include="NtValueDisplayWidget.cpp" />
     <ClCompile Include="NTValueFormatting.cpp" />
     <ClCompile Include="Plot.cpp" />
     <ClCompile Include="PlotData.cpp" />
     <ClCompile Include="PlotManager.cpp" />
+    <ClCompile Include="qcustomplot.cpp" />
+    <ClCompile Include="PlotWidget.cpp" />
     <ClCompile Include="TabEditName.cpp" />
     <ClCompile Include="XeroItemFrame.cpp" />
     <QtRcc Include="xerodashboard2.qrc" />
@@ -146,7 +152,14 @@ copy $(SolutionDir)installer\VC_redist.x64.exe $(OutDir)
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="build.h" />
+    <QtMoc Include="EditableTabWidget.h" />
+    <ClInclude Include="GraphNodeList.h" />
+    <QtMoc Include="GraphWidget.h" />
     <ClInclude Include="JsonFieldNames.h" />
+    <ClInclude Include="LinearRegression.h" />
+    <ClInclude Include="MovingAverage.h" />
+    <ClInclude Include="PlotWidget.h" />
+    <QtMoc Include="qcustomplot.h" />
     <QtMoc Include="NtValueDisplayWidget.h" />
     <QtMoc Include="TabEditName.h" />
     <QtMoc Include="XeroItemFrame.h" />
@@ -157,6 +170,9 @@ copy $(SolutionDir)installer\VC_redist.x64.exe $(OutDir)
     <ClInclude Include="PlotData.h" />
     <QtMoc Include="PlotManager.h" />
     <ClInclude Include="PlotSelectWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="TODO.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

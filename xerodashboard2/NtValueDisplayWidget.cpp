@@ -8,7 +8,7 @@
 #include "JsonFieldNames.h"
 #include "NTValueFormatting.h"
 
-NTValueDisplayWidget::NTValueDisplayWidget(nt::NetworkTableInstance& inst, const QString& node, QWidget *parent): QWidget(parent), inst_(inst)
+NTValueDisplayWidget::NTValueDisplayWidget(const QString& node, QWidget *parent): QWidget(parent)
 {
 	(void)connect(this, &QWidget::customContextMenuRequested, this, &NTValueDisplayWidget::customMenuRequested);
 
@@ -16,9 +16,6 @@ NTValueDisplayWidget::NTValueDisplayWidget(nt::NetworkTableInstance& inst, const
 	setContextMenuPolicy(Qt::CustomContextMenu);
 
 	display_type_ = "text";
-	auto info = inst_.GetTopicInfo(node.toStdString());
-	assert(info.size() == 1);
-	data_type_ = info.front().type;
 
 	node_ = node;
 	active_ = true;
@@ -89,14 +86,14 @@ void NTValueDisplayWidget::paintEvent(QPaintEvent* ev)
 	p.setBrush(back);
 	p.drawRect(0, 0, width(), height());
 
-	if (data_type_ == NT_BOOLEAN)
+	if (value_.type() == NT_Type::NT_BOOLEAN)
 	{
 		if (display_type_ == "color")
 			drawContentsBoolean(p);
 		else
 			drawContentsText(p);
 	}
-	else if (data_type_ == NT_FLOAT || data_type_ == NT_DOUBLE || data_type_ == NT_INTEGER)
+	else if (value_.type() == NT_FLOAT || value_.type() == NT_DOUBLE || value_.type() == NT_INTEGER)
 	{
 		if (display_type_ == "bar")
 			drawContentsBar(p);
@@ -116,7 +113,7 @@ void NTValueDisplayWidget::drawContentsBoolean(QPainter& p)
 	{
 		color = QColor(128, 128, 128);
 	}
-	else if (NTValueFormatting::getValueString(inst_, node_) == "true")
+	else if (NTValueFormatting::getValueString(value_) == "true")
 	{
 		color = QColor(0, 255, 0);
 	}
@@ -124,6 +121,7 @@ void NTValueDisplayWidget::drawContentsBoolean(QPainter& p)
 	{
 		color = QColor(255, 0, 0);
 	}
+
 	QBrush brush(color);
 	p.setBrush(brush);
 	p.drawRect(0, 0, width(), height());
@@ -144,7 +142,7 @@ void NTValueDisplayWidget::drawContentsText(QPainter &p)
 	else
 		txtcolor = QColor(128, 128, 128);
 
-	QString txt = NTValueFormatting::getValueString(inst_, node_);
+	QString txt = NTValueFormatting::getValueString(value_);
 	QPoint pt(width() / 2 - fm.horizontalAdvance(txt) / 2, height() / 2 - fm.height() / 2 + fm.ascent());
 	p.setPen(QPen(txtcolor));
 	p.drawText(pt, txt);

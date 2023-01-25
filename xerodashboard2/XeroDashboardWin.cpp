@@ -1,5 +1,6 @@
 #include "XeroDashboardWin.h"
 #include "build.h"
+#include <QtCore/QProcessEnvironment>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
 
@@ -31,11 +32,6 @@ XeroDashboardWin::XeroDashboardWin(QWidget* parent) : QMainWindow(parent)
 
 	if (settings_.contains(WindowStateSetting))
 		restoreState(settings_.value(WindowStateSetting).toByteArray());
-
-	timer_ = new QTimer(this);
-	connect(timer_, &QTimer::timeout, this, &XeroDashboardWin::timerHandler);
-	timer_->setInterval(100);
-	timer_->start();
 }
 
 XeroDashboardWin::~XeroDashboardWin()
@@ -54,11 +50,6 @@ QString XeroDashboardWin::versionString()
 	return ver;
 }
 
-void XeroDashboardWin::timerHandler()
-{
-	data_win_->updateNodes();
-}
-
 void XeroDashboardWin::showEvent(QShowEvent* ev)
 {
 	QString version;
@@ -74,6 +65,8 @@ void XeroDashboardWin::showEvent(QShowEvent* ev)
 
 void XeroDashboardWin::closeEvent(QCloseEvent* ev)
 {
+	nt::NetworkTableInstance::Destroy(inst_);
+
 	settings_.setValue(GeometrySetting, saveGeometry());
 	settings_.setValue(WindowStateSetting, saveState());
 
@@ -82,10 +75,10 @@ void XeroDashboardWin::closeEvent(QCloseEvent* ev)
 
 void XeroDashboardWin::createWindows()
 {
-	dashboard_view_ = new DashView(inst_);
+	dashboard_view_ = new DashView(inst_, *plots_);
 	setCentralWidget(dashboard_view_);
 
-	data_win_ = new ValueDisplayWidget(inst_, nullptr);
+	data_win_ = new ValueDisplayWidget(nullptr);
 	data_win_dock_ = new QDockWidget("NetworkTables");
 	data_win_dock_->setObjectName("NetworkTables");
 	data_win_dock_->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
@@ -105,7 +98,6 @@ void XeroDashboardWin::createWindows()
 	log_win_dock_->setAllowedAreas(Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
 	log_win_dock_->setWidget(logwin_);
 	addDockWidget(Qt::BottomDockWidgetArea, log_win_dock_);
-
 }
 
 void XeroDashboardWin::createMenus()
@@ -122,16 +114,32 @@ void XeroDashboardWin::createMenus()
 
 void XeroDashboardWin::startNetworkTables(const QString &ipaddr, const QString &name)
 {
+	bool v4 = false;
 	inst_ = nt::NetworkTableInstance::GetDefault();
 
-	// inst_.SetServer(ipaddr.toStdString().c_str(), nt::NetworkTableInstance::kDefaultPort3);
-	// inst_.StartClient3(name.toStdString());
+	if (!v4) {
+		inst_.SetServer(ipaddr.toStdString().c_str(), nt::NetworkTableInstance::kDefaultPort3);
+		inst_.StartClient3(name.toStdString());
+	}
+	else
+	{
+		inst_.SetServer(ipaddr.toStdString().c_str(), nt::NetworkTableInstance::kDefaultPort4);
+		inst_.StartClient4(name.toStdString());
 
-	inst_.SetServer(ipaddr.toStdString().c_str(), nt::NetworkTableInstance::kDefaultPort4);
-	inst_.StartClient4(name.toStdString());
+		QString prefix = plots_->getBaseName();
+		if (prefix.endsWith("/")) {
+			prefix = prefix.mid(0, prefix.length() - 1);
+		}
+		std::string p = prefix.toStdString();
+		std::vector<std::string_view> prefixes;
+		prefixes.push_back(p);
+	}
 
 	auto fn = std::bind(&XeroDashboardWin::listenNotify, this, std::placeholders::_1);
-	inst_.AddLogger(0, std::numeric_limits<int>::max(), fn);
+	QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+	if (env.contains("XERO_DASHBOARD_LOG_NT_MESSAGES")) {		
+		inst_.AddLogger(0, std::numeric_limits<int>::max(), fn);
+	}
 
 	int flags = 0xffffffff;
 	std::vector<std::string_view> prefixes = { "" };
@@ -143,9 +151,11 @@ void XeroDashboardWin::listenNotify(const nt::Event& ev)
 	if ((ev.flags & NT_EVENT_PUBLISH) == NT_EVENT_PUBLISH)
 	{
 		QString name = QString::fromStdString(ev.GetTopicInfo()->name);
+#ifdef DISPLAY_EVENTS
+		qDebug() << "NT_EVENT_PUBLISH: " << name;
+#endif
 		data_win_->addNode(name);
 		if (name.startsWith(plots_->getBaseName())) {
-			qDebug() << "NT_EVENT_PUBLISH: " << name;
 			plots_->addNode(name);
 		}
 	}
@@ -158,8 +168,9 @@ void XeroDashboardWin::listenNotify(const nt::Event& ev)
 	{
 		nt::Topic topic(ev.GetValueEventData()->topic);
 		QString topicname = QString::fromStdString(topic.GetName());
+		data_win_->updateNode(topicname, ev.GetValueEventData()->value);
+		dashboard_view_->updateNode(topicname, ev.GetValueEventData()->value);
 		if (topicname.startsWith(plots_->getBaseName())) {
-			qDebug() << "NT_EVENT_VALUE_REMOTE: " << topicname;
 			plots_->queryData();
 		}
 	}
@@ -167,8 +178,10 @@ void XeroDashboardWin::listenNotify(const nt::Event& ev)
 	{
 		nt::Topic topic(ev.GetValueEventData()->topic);
 		QString topicname = QString::fromStdString(topic.GetName());
+		data_win_->updateNode(topicname, ev.GetValueEventData()->value);
+		dashboard_view_->updateNode(topicname, ev.GetValueEventData()->value);
+
 		if (topicname.startsWith(plots_->getBaseName())) {
-			qDebug() << "NT_EVENT_VALUE_LOCAL: " << topicname;
 			plots_->queryData();
 		}
 	}

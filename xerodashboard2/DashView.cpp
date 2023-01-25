@@ -6,51 +6,38 @@
 #include <QtWidgets/QMessageBox>
 #include "XeroItemFrame.h"
 #include "NTValueDisplayWidget.h"
-// #include "PlotWidget.h"
-// #include "PlotMgr.h"
+#include "PlotWidget.h"
+#include "PlotManager.h"
 #include "JsonFieldNames.h"
 #include "NTValueFormatting.h"
+#include <networktables/GenericEntry.h>
 
-DashView::DashView(nt::NetworkTableInstance& inst, QWidget *parent) : QWidget(parent), inst_(inst)
+DashView::DashView(nt::NetworkTableInstance& inst, PlotManager& mgr, QWidget *parent) : QWidget(parent), inst_(inst), plot_mgr_(mgr)
 {
 	setAcceptDrops(true);
+	selecting_ = false;
+	tile_margin_ = 3.0;
 }
 
 DashView::~DashView()
 {
 }
 
-//void DashView::addTab()
-//{
-//	if (selected_.count() != 1)
-//		return;
-//
-//	XeroItemFrame* frame = dynamic_cast<XeroItemFrame*>(selected_.at(0));
-//	if (frame->isPlot())
-//	{
-//		PlotWidget* pwid = dynamic_cast<PlotWidget*>(frame->child());
-//		if (pwid != nullptr)
-//		{
-//			pwid->addTab();
-//		}
-//	}
-//}
-//
-//void DashView::closeTab()
-//{
-//	if (selected_.count() != 1)
-//		return;
-//
-//	XeroItemFrame* frame = dynamic_cast<XeroItemFrame*>(selected_.at(0));
-//	if (frame->isPlot())
-//	{
-//		PlotWidget* pwid = dynamic_cast<PlotWidget*>(frame->child());
-//		if (pwid != nullptr)
-//		{
-//			pwid->closeTab();
-//		}
-//	}
-//}
+void DashView::updateNode(const QString& node, const nt::Value& value)
+{
+	for (auto child : children())
+	{
+		XeroItemFrame* frame = dynamic_cast<XeroItemFrame*>(child);
+		if (frame != nullptr) {
+			NTValueDisplayWidget* display = dynamic_cast<NTValueDisplayWidget*>(frame->child());
+			if (display != nullptr) {
+				if (display->node() == node) {
+					display->updateData(value);
+				}
+			}
+		}
+	}
+}
 
 int DashView::count() const
 {
@@ -229,7 +216,6 @@ void DashView::createNTWidget(const QJsonObject& obj)
 		return;
 
 	QString value = obj.value(JsonFieldNames::Path).toString();
-	QString typestr = obj.value(JsonFieldNames::Type).toString();
 
 	QString title;
 	int pos = value.lastIndexOf("/");
@@ -240,7 +226,7 @@ void DashView::createNTWidget(const QJsonObject& obj)
 
 	XeroItemFrame* frame = createNewFrame();
 	
-	NTValueDisplayWidget* vwid = new NTValueDisplayWidget(inst_, value);
+	NTValueDisplayWidget* vwid = new NTValueDisplayWidget(value);
 	frame->setWidget(vwid);
 	frame->setVisible(true);
 	frame->setTitle(title);
@@ -368,34 +354,34 @@ void DashView::dropEvent(QDropEvent* ev)
 
 		XeroItemFrame* frame = createNewFrame();
 
-		NTValueDisplayWidget* vwid = new NTValueDisplayWidget(inst_, node, frame);
+		nt::Topic t = inst_.GetTopic(node.toStdString());
+		nt::Value v = t.GenericSubscribe().Get();
+
+		NTValueDisplayWidget* vwid = new NTValueDisplayWidget(node, frame);
 		frame->setWidget(vwid);
 		frame->setVisible(true);
 		frame->setTitle(title);
 
 		frame->setGeometry(ev->pos().x(), ev->pos().y(), frame->width(), frame->height());
+
+		vwid->updateData(v);
 	}
 	else if (value.startsWith("PLOT:"))
 	{
-		//PlotWidget* vwid;
-		//XeroItemFrame* frame = createNewFrame();
+		QString plotname = value.mid(6);
+		std::shared_ptr<Plot> plot = plot_mgr_.getPlot(plotname);
 
-		//try {
-		//	vwid = new PlotWidget(plotmgr_, ntmgr_, value.mid(5), frame);
-		//}
-		//catch (...)
-		//{
-		//	delete frame;
-		//	QString msg = "The plot '" + value.mid(5) + "' does not exist";
-		//	QMessageBox::critical(this, "No Such Plot", msg);
-		//	return;
-		//}
-
-		//frame->setWidget(vwid);
-		//frame->setVisible(true);
-		//frame->setTitle(value.mid(5));
-
-		//frame->setGeometry(ev->pos().x(), ev->pos().y(), frame->width(), frame->height());
+		if (plot != nullptr) {
+			XeroItemFrame* frame = createNewFrame();
+			PlotWidget* vwid = new PlotWidget(plot, frame);
+			frame->setWidget(vwid);
+			frame->setVisible(true);
+			frame->setTitle(plotname);
+			frame->setGeometry(ev->pos().x(), ev->pos().y(), 800, 600);
+		}
+		else {
+			QMessageBox::warning(this, "Cannot Find Plot", "The plot '" + plotname + "' was not found");
+		}
 	}
 }
 

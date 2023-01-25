@@ -10,63 +10,69 @@
 #include <networktables/IntegerArrayTopic.h>
 #include <networktables/StringTopic.h>
 #include <networktables/StringArrayTopic.h>
+#include <networktables/GenericEntry.h>
 
-QString NTValueFormatting::getValueString(nt::NetworkTableInstance &inst, const QString& node)
+QString NTValueFormatting::getValueString(nt::Value value)
 {
 	QString ret;
-	nt::Topic topic = inst.GetTopic(node.toStdString());
 
-	switch (topic.GetType())
-	{
-	case nt::NetworkTableType::kBoolean:
-		ret = (inst.GetBooleanTopic(node.toStdString()).Subscribe(false).Get() ? "true " : "false");
+	switch (value.type()) {
+	case NT_Type::NT_BOOLEAN:
+		ret = value.GetBoolean() ? "true" : "false";
 		break;
 
-	case nt::NetworkTableType::kBooleanArray:
-		ret = booleanArray(inst, node);
+	case NT_Type::NT_BOOLEAN_ARRAY:
+		ret = booleanArray(value.GetBooleanArray());
 		break;
 
-	case nt::NetworkTableType::kDouble:
-		ret = QString::number(inst.GetDoubleTopic(node.toStdString()).Subscribe(0.0).Get());
+	case NT_Type::NT_DOUBLE:
+		ret = QString::number(value.GetDouble());
 		break;
 
-	case nt::NetworkTableType::kDoubleArray:
-		ret = doubleArray(inst, node);
+	case NT_Type::NT_DOUBLE_ARRAY:
+		ret = doubleArray(value.GetDoubleArray());
 		break;
 
-	case nt::NetworkTableType::kFloat:
-		ret = QString::number(inst.GetFloatTopic(node.toStdString()).Subscribe(0.0).Get());
+	case NT_Type::NT_FLOAT:
+		ret = QString::number(value.GetFloat());
 		break;
 
-	case nt::NetworkTableType::kFloatArray:
-		ret = floatArray(inst, node);
+	case NT_Type::NT_FLOAT_ARRAY:
+		ret = floatArray(value.GetFloatArray());
 		break;
 
-	case nt::NetworkTableType::kInteger:
-		ret = QString::number(inst.GetIntegerTopic(node.toStdString()).Subscribe(0.0).Get());
+	case NT_Type::NT_INTEGER:
+		ret = QString::number(value.GetInteger());
 		break;
 
-	case nt::NetworkTableType::kIntegerArray:
-		ret = integerArray(inst, node);
+	case NT_Type::NT_INTEGER_ARRAY:
+		ret = integerArray(value.GetIntegerArray());
 		break;
 
-	case nt::NetworkTableType::kString:
-		ret = QString::fromStdString(inst.GetStringTopic(node.toStdString()).Subscribe("<NULL>").Get());
+	case NT_Type::NT_STRING:
+		ret = QString::fromStdString(std::string(value.GetString()));
 		break;
 
-	case nt::NetworkTableType::kStringArray:
-		ret = stringArray(inst, node);
+	case NT_Type::NT_STRING_ARRAY:
+		ret = stringArray(value.GetStringArray());
 		break;
 	}
 
 	return ret;
 }
 
-QString NTValueFormatting::booleanArray(nt::NetworkTableInstance& inst, const QString& node)
+QString NTValueFormatting::getValueString(nt::NetworkTableInstance& inst, const QString& node)
+{
+	QString ret;
+	nt::Topic topic = inst.GetTopic(node.toStdString());
+	return getValueString(topic.GenericSubscribe().Get());
+}
+
+QString NTValueFormatting::booleanArray(std::span<const int> value)
 {
 	QString ret;
 
-	auto value = inst.GetBooleanArrayTopic(node.toStdString()).Subscribe({}).Get();
+	ret += "[";
 	for (int i = 0; i < value.size(); i++) {
 		if (i != 0) {
 			ret += ", ";
@@ -74,15 +80,16 @@ QString NTValueFormatting::booleanArray(nt::NetworkTableInstance& inst, const QS
 
 		ret += value[i] ? "true " : "false";
 	}
+	ret += "]";
 
 	return ret;
 }
 
-QString NTValueFormatting::doubleArray(nt::NetworkTableInstance& inst, const QString& node)
+QString NTValueFormatting::doubleArray(std::span<const double> value)
 {
 	QString ret;
 
-	auto value = inst.GetDoubleArrayTopic(node.toStdString()).Subscribe({}).Get();
+	ret += "[";
 	for (int i = 0; i < value.size(); i++) {
 		if (i != 0) {
 			ret += ", ";
@@ -90,15 +97,16 @@ QString NTValueFormatting::doubleArray(nt::NetworkTableInstance& inst, const QSt
 
 		ret += QString::number(value[i]);
 	}
+	ret += "]";
 
 	return ret;
 }
 
-QString NTValueFormatting::floatArray(nt::NetworkTableInstance& inst, const QString& node)
+QString NTValueFormatting::floatArray(std::span<const float> value)
 {
 	QString ret;
 
-	auto value = inst.GetFloatArrayTopic(node.toStdString()).Subscribe({}).Get();
+	ret += "[";
 	for (int i = 0; i < value.size(); i++) {
 		if (i != 0) {
 			ret += ", ";
@@ -106,15 +114,16 @@ QString NTValueFormatting::floatArray(nt::NetworkTableInstance& inst, const QStr
 
 		ret += QString::number(value[i]);
 	}
+	ret += "]";
 
 	return ret;
 }
 
-QString NTValueFormatting::integerArray(nt::NetworkTableInstance& inst, const QString& node)
+QString NTValueFormatting::integerArray(std::span<const int64_t> value)
 {
 	QString ret;
 
-	auto value = inst.GetIntegerArrayTopic(node.toStdString()).Subscribe({}).Get();
+	ret += "[";
 	for (int i = 0; i < value.size(); i++) {
 		if (i != 0) {
 			ret += ", ";
@@ -122,15 +131,16 @@ QString NTValueFormatting::integerArray(nt::NetworkTableInstance& inst, const QS
 
 		ret += QString::number(value[i]);
 	}
+	ret += "]";
 
 	return ret;
 }
 
-QString NTValueFormatting::stringArray(nt::NetworkTableInstance& inst, const QString& node)
+QString NTValueFormatting::stringArray(std::span<const std::string> value)
 {
 	QString ret;
 
-	auto value = inst.GetStringArrayTopic(node.toStdString()).Subscribe({}).Get();
+	ret += "[";
 	for (int i = 0; i < value.size(); i++) {
 		if (i != 0) {
 			ret += ", ";
@@ -138,6 +148,7 @@ QString NTValueFormatting::stringArray(nt::NetworkTableInstance& inst, const QSt
 
 		ret += QString::fromStdString(value[i]);
 	}
+	ret += "]";
 
 	return ret;
 }

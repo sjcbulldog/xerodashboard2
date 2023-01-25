@@ -7,6 +7,9 @@ Plot::Plot(nt::NetworkTableInstance &inst, const QString &basename, const QStrin
 	plot_base_name_ = basename;
 	complete_ = false;
 	version_ = -1;
+	ready_ = false;
+	count_ = 0;
+	threshold_ = 16;
 
 	QString topicname = plot_base_name_ + name + "/columns";
 	auto column_topic = inst_.GetStringArrayTopic(topicname.toStdString());
@@ -89,6 +92,8 @@ void Plot::initColumns(const std::vector<std::string>& colstrs)
 		columns_.push_back(QString::fromStdString(str));
 		data_.push_back(empty);
 	}
+
+	emit columnsDefined(columns_);
 }
 
 bool Plot::compareCols(const std::vector<std::string>& colstrs)
@@ -167,20 +172,25 @@ bool Plot::readV4Data()
 	bool received = false;
 	for (int i = 0; i < data_subscribers_.size(); i++) {
 		std::vector<nt::TimestampedDouble> data = data_subscribers_[i]->ReadQueue();
-		for (int j = 0; j < data.size(); j++) {
-			received = true;
-			if (i < data_.size()) {
+		if (data.size() > 0) {
+			QString msg = "readV4Data: col " + QString::number(i) + " size " + QString::number(data.size());
+			for (int j = 0; j < data.size(); j++) {
+				received = true;
+				msg += " " + QString::number(data[j].value);
 				data_[i].push_back(data[j].value);
 			}
+
+			qDebug() << msg;
 		}
 	}
-
-
 	return received;
 }
 
 void Plot::queryData()
 {
+	if (!ready_)
+		return;
+
 	bool received = false;
 	lock_.lock();
 
@@ -216,38 +226,53 @@ void Plot::queryData()
 	}
 
 	if (version_ == 3) {
+		int before = data_[0].size();
 		received = readV3Data();
 	}
 	else if (version_ == 4) {
 		received = readV4Data();
 	}
 
+	bool emitComplete = false;
+	bool emitRestarted = false;
+	bool emitData = false;
+
 	bool isComplete = complete_subscriber_.Get();
-	if (complete_ == false && isComplete == true) {
+	if (complete_ == false && isComplete == true) 
+	{
 		//
 		// We just completed, emit a signal
 		//
-		emit complete(name_);
+		emitComplete = true;
+		emitData = true;
 	}
-	else if (complete_ == true && isComplete == false) {
+	else if (complete_ == true && isComplete == false) 
+	{
 		//
 		// We just reset emit a signal
 		//
 		reset();
-		emit restarted(name_);
+		count_ = 0;
+		emitRestarted = true;
 	}
+	else if (received && data_[0].size() - count_ > threshold_)
+	{
+		emitData = true;
+		count_ = data_[0].size();
+	}
+
 	complete_ = isComplete;
 	lock_.unlock();
 
-	if (received) {
-		if (received) {
-			QString msg = "counts:";
-			for (int i = 0; i < data_.size(); i++) {
-				msg += " " + QString::number(data_[i].size());
-			}
-			qDebug() << msg;
-		}
-
+	if (emitData) {
 		emit dataArrived(name_);
+	}
+
+	if (emitComplete) {
+		emit complete(name_);
+	}
+
+	if (emitRestarted) {
+		emit restarted(name_);
 	}
 }
